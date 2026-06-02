@@ -14,6 +14,7 @@ find_package(SFML COMPONENTS
 
 add_executable(PhysicsSandbox
     src/main.cpp
+    src/physics/Ball.cpp
 )
 
 target_link_libraries(PhysicsSandbox PRIVATE

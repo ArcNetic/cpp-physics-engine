@@ -1,20 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
 #include <cmath>
+#include <vector>
+#include "physics/Ball.h"
 
 int main()
 {
     sf::RenderWindow window(
         sf::VideoMode({800, 600}),
         "Physics Sandbox");
-
-    // Creating a new Circle
-    float radius = 50.f;
-    sf::CircleShape circle(radius);
-    circle.setPosition({300.f, 200.f});
-
-    // Velocity vector
-    sf::Vector2f velocity(0.f, 0.f);
 
     // Floor
     const float floorY = 500.f;
@@ -31,6 +25,9 @@ int main()
     // clock for dt
     sf::Clock clock;
 
+    // Multiple balls
+    std::vector<Ball> balls;
+
     // Draw floor
     sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
     floor.setPosition({0.f, 550.f});
@@ -40,46 +37,40 @@ int main()
     {
         float dt = clock.restart().asSeconds(); // time since the last frame
 
+        // Events
         while (const std::optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
             }
-        }
 
-        // Apply gravity
-        velocity.y += gravity * dt;
-
-        // Get current position
-        sf::Vector2f position = circle.getPosition();
-
-        // Movement
-        position += velocity * dt;
-
-        // Collision
-        if (position.y + radius >= floorY)
-        {
-            position.y = floorY - radius;
-
-            // Stop movement
-            velocity.y *= -e;
-
-            // to solve bouncing forever problem
-            if (std::abs(velocity.y) < sleepThreshold)
+            // if mouse clicked -> spawn a ball
+            if (const auto *mousepressed = event->getIf<sf::Event::MouseButtonPressed>())
             {
-                velocity.y = 0.f;
+                if (mousepressed->button == sf::Mouse::Button::Left)
+                {
+                    sf::Vector2i mousePos =
+                        sf::Mouse::getPosition(window);
+                    balls.emplace_back(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f);
+                }
             }
         }
 
-        // update
-        circle.setPosition(position);
+        // Update all balls
+        for (Ball& ball : balls)
+        {
+            ball.update(dt, gravity, floorY, e, sleepThreshold);
+        }
 
         // render
         window.clear();
 
-        window.draw(circle);
         window.draw(floor);
+        for (Ball &ball : balls)
+        {
+            ball.render(window);
+        }
         window.display();
     }
 
