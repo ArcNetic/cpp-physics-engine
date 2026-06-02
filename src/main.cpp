@@ -5,15 +5,18 @@ int main()
 {
     sf::RenderWindow window(
         sf::VideoMode({800, 600}),
-        "Physics Sandbox"
-    );
+        "Physics Sandbox");
 
     // Creating a new Circle
-    sf::CircleShape circle(50.f);
+    float radius = 50.f;
+    sf::CircleShape circle(radius);
     circle.setPosition({300.f, 200.f});
 
     // Velocity vector
     sf::Vector2f velocity(0.f, 0.f);
+
+    // Floor
+    const float floorY = 500.f;
 
     // Gravity Acceleration
     const float gravity = 980.f;
@@ -42,14 +45,28 @@ int main()
         // Movement
         position += velocity * dt;
 
+        // Collision
+        if (position.y + radius >= floorY)
+        {
+            position.y = floorY - radius;
+
+            // Stop movement
+            velocity.y = 0.f;
+        }
+
         // update
         circle.setPosition(position);
+
+        // Draw floor
+        sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
+        floor.setPosition({0.f, 550.f});
+        floor.setFillColor(sf::Color::White);
 
         // render
         window.clear();
 
         window.draw(circle);
-
+        window.draw(floor);
         window.display();
     }
 
