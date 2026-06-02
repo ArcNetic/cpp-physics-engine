@@ -8,18 +8,22 @@ int main()
         "Physics Sandbox"
     );
 
+    // Creating a new Circle
     sf::CircleShape circle(50.f);
     circle.setPosition({300.f, 200.f});
 
-    // velocity vector
-    sf::Vector2f velocity(100.f, 100.f);
+    // Velocity vector
+    sf::Vector2f velocity(0.f, 0.f);
 
-    // clock for delta time
+    // Gravity Acceleration
+    const float gravity = 980.f;
+
+    // clock for dt
     sf::Clock clock;
 
     while (window.isOpen())
     {
-        float dt = clock.restart().asSeconds();
+        float dt = clock.restart().asSeconds(); // time since the last frame
 
         while (const std::optional event = window.pollEvent())
         {
@@ -29,15 +33,19 @@ int main()
             }
         }
 
-        // get current position
+        // Apply gravity
+        velocity.y += gravity * dt;
+
+        // Get current position
         sf::Vector2f position = circle.getPosition();
 
-        // movement
+        // Movement
         position += velocity * dt;
 
-        // update circle position
+        // update
         circle.setPosition(position);
 
+        // render
         window.clear();
 
         window.draw(circle);
