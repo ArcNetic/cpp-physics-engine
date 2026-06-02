@@ -21,8 +21,16 @@ int main()
     // Gravity Acceleration
     const float gravity = 980.f;
 
+    //Co-efficient of restituion
+    const float e = 0.7f;
+
     // clock for dt
     sf::Clock clock;
+
+    // Draw floor
+    sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
+    floor.setPosition({0.f, 550.f});
+    floor.setFillColor(sf::Color::White);
 
     while (window.isOpen())
     {
@@ -51,16 +59,11 @@ int main()
             position.y = floorY - radius;
 
             // Stop movement
-            velocity.y = 0.f;
+            velocity.y = (0 - velocity.y) * e;
         }
 
         // update
         circle.setPosition(position);
-
-        // Draw floor
-        sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
-        floor.setPosition({0.f, 550.f});
-        floor.setFillColor(sf::Color::White);
 
         // render
         window.clear();
