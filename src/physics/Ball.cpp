@@ -38,6 +38,11 @@ void Ball::render(sf::RenderWindow& window)
     window.draw(shape);
 }
 
+void Ball::setColor(const sf::Color& color)
+{
+    shape.setFillColor(color);
+}
+
 sf::Vector2f Ball::getPosition() const
 {
     return shape.getPosition();

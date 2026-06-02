@@ -11,6 +11,7 @@ public:
     void render(sf::RenderWindow& window);
     sf::Vector2f getPosition() const;
     float getRadius() const;
+    void setColor(const sf::Color& color);
 
 private:
     sf::CircleShape shape;

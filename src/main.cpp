@@ -63,7 +63,14 @@ int main()
         {
             ball.update(dt, gravity, floorY, e, sleepThreshold);
         }
-        
+
+        // default color
+        for (Ball &ball : balls)
+        {
+            ball.setColor(
+                sf::Color::White);
+        }
+
         // check for collisions
         for (size_t i = 0; i < balls.size(); i++)
         {
@@ -81,14 +88,18 @@ int main()
 
                 float dy = posB.y - posA.y;
 
-                float distance = std::sqrt( dx * dx + dy * dy);
+                float distance = std::sqrt(dx * dx + dy * dy);
 
                 float minDistance = radiusA + radiusB;
 
                 // Collision detected
                 if (distance < minDistance)
                 {
-                    std::cout << "Collision!\n";
+                    balls[i].setColor(
+                        sf::Color::Red);
+
+                    balls[j].setColor(
+                        sf::Color::Red);
                 }
             }
         }
