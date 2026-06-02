@@ -1,4 +1,4 @@
-\# C++ Physics Sandbox
+# C++ Physics Sandbox
 
 
 
@@ -6,23 +6,23 @@ A custom 2D physics engine built in C++ using SFML for rendering and input.
 
 
 
-\## Features
+## Features
 
-\- Gravity
+- Gravity
 
-\- Rigid body movement
+- Rigid body movement
 
-\- Collision detection
+- Collision detection
 
-\- Friction simulation
+- Friction simulation
 
 
 
-\## Tech Stack
+## Tech Stack
 
-\- C++20
+- C++20
 
-\- SFML
+- SFML
 
-\- CMake
+- CMake
 
