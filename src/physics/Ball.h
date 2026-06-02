@@ -9,6 +9,8 @@ public:
 
     void update(float dt, float gravity, float floorY, float restitution, float sleepThreshold);
     void render(sf::RenderWindow& window);
+    sf::Vector2f getPosition() const;
+    float getRadius() const;
 
 private:
     sf::CircleShape shape;

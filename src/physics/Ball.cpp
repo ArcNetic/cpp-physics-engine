@@ -37,3 +37,13 @@ void Ball::render(sf::RenderWindow& window)
 {
     window.draw(shape);
 }
+
+sf::Vector2f Ball::getPosition() const
+{
+    return shape.getPosition();
+}
+
+float Ball::getRadius() const
+{
+    return radius;
+}

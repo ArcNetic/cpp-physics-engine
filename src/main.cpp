@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <optional>
 #include <cmath>
 #include <vector>
@@ -58,9 +59,38 @@ int main()
         }
 
         // Update all balls
-        for (Ball& ball : balls)
+        for (Ball &ball : balls)
         {
             ball.update(dt, gravity, floorY, e, sleepThreshold);
+        }
+        
+        // check for collisions
+        for (size_t i = 0; i < balls.size(); i++)
+        {
+            for (size_t j = i + 1; j < balls.size(); j++)
+            {
+                sf::Vector2f posA = balls[i].getPosition();
+
+                sf::Vector2f posB = balls[j].getPosition();
+
+                float radiusA = balls[i].getRadius();
+
+                float radiusB = balls[j].getRadius();
+
+                float dx = posB.x - posA.x;
+
+                float dy = posB.y - posA.y;
+
+                float distance = std::sqrt( dx * dx + dy * dy);
+
+                float minDistance = radiusA + radiusB;
+
+                // Collision detected
+                if (distance < minDistance)
+                {
+                    std::cout << "Collision!\n";
+                }
+            }
         }
 
         // render
