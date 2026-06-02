@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
+#include <cmath>
 
 int main()
 {
@@ -21,8 +22,11 @@ int main()
     // Gravity Acceleration
     const float gravity = 980.f;
 
-    //Co-efficient of restituion
+    // Co-efficient of restituion
     const float e = 0.7f;
+
+    // SleepThreshold
+    const float sleepThreshold = 30.f;
 
     // clock for dt
     sf::Clock clock;
@@ -59,7 +63,13 @@ int main()
             position.y = floorY - radius;
 
             // Stop movement
-            velocity.y = (0 - velocity.y) * e;
+            velocity.y *= -e;
+
+            // to solve bouncing forever problem
+            if (std::abs(velocity.y) < sleepThreshold)
+            {
+                velocity.y = 0.f;
+            }
         }
 
         // update
