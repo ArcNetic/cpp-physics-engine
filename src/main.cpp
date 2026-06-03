@@ -95,11 +95,17 @@ int main()
                 // Collision detected
                 if (distance < minDistance)
                 {
-                    balls[i].setColor(
-                        sf::Color::Red);
+                    float overlap = minDistance - distance;
+                    sf::Vector2f collisionNormal(dx / distance, dy / distance); // NOTE : divide by zero is possible (will resolve later)
 
-                    balls[j].setColor(
-                        sf::Color::Red);
+                    // Push balls equally apart
+                    sf::Vector2f correction = collisionNormal * (overlap / 2.f);
+
+                    balls[i].setColor(sf::Color::Red);
+                    balls[j].setColor(sf::Color::Red);
+
+                    balls[i].setPosition(posA - correction);
+                    balls[j].setPosition(posB + correction);
                 }
             }
         }

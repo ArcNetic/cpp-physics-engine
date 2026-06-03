@@ -12,7 +12,7 @@ public:
     sf::Vector2f getPosition() const;
     float getRadius() const;
     void setColor(const sf::Color& color);
-
+    void setPosition(const sf::Vector2f& position);
 private:
     sf::CircleShape shape;
 

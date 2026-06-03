@@ -43,6 +43,11 @@ void Ball::setColor(const sf::Color& color)
     shape.setFillColor(color);
 }
 
+void Ball::setPosition(const sf::Vector2f& position)
+{
+    shape.setPosition(position);
+}
+
 sf::Vector2f Ball::getPosition() const
 {
     return shape.getPosition();
