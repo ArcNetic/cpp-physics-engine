@@ -101,11 +101,28 @@ int main()
                     // Push balls equally apart
                     sf::Vector2f correction = collisionNormal * (overlap / 2.f);
 
-                    balls[i].setColor(sf::Color::Red);
-                    balls[j].setColor(sf::Color::Red);
-
                     balls[i].setPosition(posA - correction);
                     balls[j].setPosition(posB + correction);
+
+                    sf::Vector2f velocityA = balls[i].getVelocity();
+                    sf::Vector2f velocityB = balls[j].getVelocity();
+
+                    sf::Vector2f relativeVelocity = velocityB - velocityA;
+
+                    float velocityAlongNormal = relativeVelocity.x * collisionNormal.x + relativeVelocity.y * collisionNormal.y;
+                    if (velocityAlongNormal > 0) // already separating
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        float impulse = -(1.f + e) * velocityAlongNormal;
+                        impulse /= 2.f;
+
+                        sf::Vector2f impulseVector = collisionNormal * impulse;
+                        balls[i].setVelocity(velocityA - impulseVector);
+                        balls[j].setVelocity(velocityB + impulseVector);
+                    }
                 }
             }
         }

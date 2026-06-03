@@ -57,3 +57,12 @@ float Ball::getRadius() const
 {
     return radius;
 }
+
+sf::Vector2f Ball::getVelocity() const
+{
+    return velocity;
+}
+void Ball::setVelocity(const sf::Vector2f& newvelocity)
+{
+    velocity = newvelocity;
+}

@@ -13,6 +13,8 @@ public:
     float getRadius() const;
     void setColor(const sf::Color& color);
     void setPosition(const sf::Vector2f& position);
+    sf::Vector2f getVelocity() const;
+    void setVelocity(const sf::Vector2f& velocity);
 private:
     sf::CircleShape shape;
 
