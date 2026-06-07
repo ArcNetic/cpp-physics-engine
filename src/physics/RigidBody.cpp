@@ -9,6 +9,7 @@ namespace Physics
           mass(mass),
           inverseMass(mass > 0.f ? 1.f / mass : 0.f),
           restitution(0.7f),
+          angle(0.f),
           shape(std::move(shape))
     {
     }
@@ -75,6 +76,16 @@ namespace Physics
     const Shape* RigidBody::getShape() const
     {
         return shape.get();
+    }
+
+    float RigidBody::getAngle() const
+    {
+        return angle;
+    }
+
+    void RigidBody::setAngle(float a)
+    {
+        angle = a;
     }
 
     bool RigidBody::isStatic() const

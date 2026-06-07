@@ -1,5 +1,6 @@
 #include "PhysicsWorld.h"
 #include "CircleBody.h"
+#include "BoxShape.h"
 #include "CollisionDetector.h"
 #include "CollisionResolver.h"
 #include "Constants.h"
@@ -52,30 +53,42 @@ void PhysicsWorld::enforceFloorConstraint()
 {
     for (auto& body : bodies)
     {
-        const auto* circle = dynamic_cast<const Physics::CircleCollider*>(body->getShape());
-        if (!circle)
-            continue;
+        const Physics::Shape* shape = body->getShape();
+        if (!shape) continue;
 
         sf::Vector2f pos = body->getPosition();
-        float radius = circle->getRadius();
+        float bottomExtent = 0.f;
 
-        if (pos.y + radius >= Constants::FLOOR_Y)
+        if (shape->getType() == Physics::ShapeType::Circle)
         {
-            pos.y = Constants::FLOOR_Y - radius;
+            bottomExtent = static_cast<const Physics::CircleCollider*>(shape)->getRadius();
+        }
+        else if (shape->getType() == Physics::ShapeType::Box)
+        {
+            // For boxes, use the bounding radius as a conservative extent
+            // (exact would require computing rotated vertex Y, but this is sufficient)
+            const auto* box = static_cast<const Physics::BoxCollider*>(shape);
+            auto verts = box->getVertices(pos, body->getAngle());
+            float maxY = verts[0].y;
+            for (int i = 1; i < 4; i++)
+                if (verts[i].y > maxY) maxY = verts[i].y;
+            bottomExtent = maxY - pos.y;
+        }
+
+        if (pos.y + bottomExtent >= Constants::FLOOR_Y)
+        {
+            pos.y = Constants::FLOOR_Y - bottomExtent;
             body->setPosition(pos);
 
             sf::Vector2f vel = body->getVelocity();
             vel.y *= -body->getRestitution();
 
-            // Sleep threshold: stop micro-bouncing
             if (std::abs(vel.y) < Constants::SLEEP_THRESHOLD)
             {
                 vel.y = 0.f;
             }
 
-            // Floor friction: reduce horizontal velocity
             vel.x *= (1.f - Constants::FRICTION_DYNAMIC);
-
             body->setVelocity(vel);
         }
     }
@@ -85,14 +98,27 @@ void PhysicsWorld::render(sf::RenderWindow& window)
 {
     for (const auto& body : bodies)
     {
-        const auto* circle = dynamic_cast<const Physics::CircleCollider*>(body->getShape());
-        if (circle)
+        const Physics::Shape* shape = body->getShape();
+        if (!shape) continue;
+
+        if (shape->getType() == Physics::ShapeType::Circle)
         {
-            sf::CircleShape shape(circle->getRadius());
-            shape.setOrigin({circle->getRadius(), circle->getRadius()});
-            shape.setPosition(body->getPosition());
-            shape.setFillColor(sf::Color::White);
-            window.draw(shape);
+            const auto* circle = static_cast<const Physics::CircleCollider*>(shape);
+            sf::CircleShape drawShape(circle->getRadius());
+            drawShape.setOrigin({circle->getRadius(), circle->getRadius()});
+            drawShape.setPosition(body->getPosition());
+            drawShape.setFillColor(sf::Color::White);
+            window.draw(drawShape);
+        }
+        else if (shape->getType() == Physics::ShapeType::Box)
+        {
+            const auto* box = static_cast<const Physics::BoxCollider*>(shape);
+            sf::RectangleShape drawShape({box->getWidth(), box->getHeight()});
+            drawShape.setOrigin({box->getWidth() / 2.f, box->getHeight() / 2.f});
+            drawShape.setPosition(body->getPosition());
+            drawShape.setRotation(sf::radians(body->getAngle()));
+            drawShape.setFillColor(sf::Color::White);
+            window.draw(drawShape);
         }
     }
 }

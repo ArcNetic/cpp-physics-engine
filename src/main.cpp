@@ -3,6 +3,7 @@
 #include <memory>
 #include "physics/RigidBody.h"
 #include "physics/CircleBody.h"
+#include "physics/BoxShape.h"
 #include "physics/PhysicsWorld.h"
 #include "physics/Constants.h"
 
@@ -32,22 +33,31 @@ int main()
                 window.close();
             }
 
-            // if mouse clicked -> spawn a ball
+            // Left-click -> spawn a circle
             if (const auto *mousepressed = event->getIf<sf::Event::MouseButtonPressed>())
             {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f spawnPos(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y));
+
                 if (mousepressed->button == sf::Mouse::Button::Left)
                 {
-                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-
                     float radius = 50.f;
                     float mass = 1.f;
 
                     auto shape = std::make_unique<Physics::CircleCollider>(radius);
-                    auto body = std::make_unique<Physics::RigidBody>(
-                        sf::Vector2f(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y)),
-                        mass,
-                        std::move(shape)
-                    );
+                    auto body = std::make_unique<Physics::RigidBody>(spawnPos, mass, std::move(shape));
+
+                    world.addBody(std::move(body));
+                }
+                // Right-click -> spawn a box
+                else if (mousepressed->button == sf::Mouse::Button::Right)
+                {
+                    float width = 80.f;
+                    float height = 60.f;
+                    float mass = 1.5f;
+
+                    auto shape = std::make_unique<Physics::BoxCollider>(width, height);
+                    auto body = std::make_unique<Physics::RigidBody>(spawnPos, mass, std::move(shape));
 
                     world.addBody(std::move(body));
                 }
