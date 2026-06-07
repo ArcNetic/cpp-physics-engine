@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector2.h"
 
 #include <SFML/System/Vector2.hpp>
 #include "RigidBody.h"
@@ -10,9 +11,9 @@ namespace Physics
     {
         RigidBody* a = nullptr;
         RigidBody* b = nullptr;
-        sf::Vector2f normal;   // Points from A toward B
+        Vector2 normal;   // Points from A toward B
         float penetration = 0.f;
-        sf::Vector2f contactPoint; // World space contact point
+        Vector2 contactPoint; // World space contact point
     };
 
     class CollisionDetector
@@ -29,10 +30,11 @@ namespace Physics
 
         // SAT helpers
         struct Projection { float min; float max; };
-        static Projection projectVertices(const sf::Vector2f* vertices, int count, const sf::Vector2f& axis);
-        static Projection projectCircle(const sf::Vector2f& center, float radius, const sf::Vector2f& axis);
-        static float dot(const sf::Vector2f& a, const sf::Vector2f& b);
-        static float lengthSq(const sf::Vector2f& v);
-        static sf::Vector2f getSupportPoint(const std::array<sf::Vector2f, 4>& verts, const sf::Vector2f& dir);
+        static Projection projectVertices(const Vector2* vertices, int count, const Vector2& axis);
+        static Projection projectCircle(const Vector2& center, float radius, const Vector2& axis);
+        static float dot(const Vector2& a, const Vector2& b);
+        static float lengthSq(const Vector2& v);
+        static Vector2 getSupportPoint(const std::array<Vector2, 4>& verts, const Vector2& dir);
     };
 }
+

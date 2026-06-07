@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector2.h"
 
 #include "Shape.h"
 #include <SFML/System/Vector2.hpp>
@@ -19,10 +20,10 @@ namespace Physics
         float getHeight() const;
 
         // Returns the 4 corner vertices in world space given a position and rotation angle
-        std::array<sf::Vector2f, 4> getVertices(const sf::Vector2f& position, float angle) const;
+        std::array<Vector2, 4> getVertices(const Vector2& position, float angle) const;
 
         // Returns the 2 unique edge normals (perpendicular to each edge direction)
-        std::array<sf::Vector2f, 2> getEdgeNormals(float angle) const;
+        std::array<Vector2, 2> getEdgeNormals(float angle) const;
 
     private:
         float width;
@@ -30,3 +31,4 @@ namespace Physics
         float boundingRadius; // half-diagonal, cached
     };
 }
+

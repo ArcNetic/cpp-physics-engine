@@ -6,11 +6,32 @@
 #include "Constants.h"
 #include <cmath>
 
+PhysicsWorld::PhysicsWorld(float width, float height)
+    : grid(width, height, 100.f) // 100x100 grid cells
+{
+}
+
 void PhysicsWorld::update(float dt)
 {
     applyGravity();
+
+    // Pre-step constraints (calculate bias and effective masses)
+    for (auto& constraint : constraints)
+        constraint->preStep(dt);
+
     integrateAll(dt);
+
+    // Solve collisions
     detectAndResolveCollisions();
+
+    // Solve constraints (typically solved multiple times in a loop with collisions,
+    // but a single pass after collisions works for simple joints)
+    // We'll do a few iterations for stability
+    for (int i = 0; i < 4; i++)
+    {
+        for (auto& constraint : constraints)
+            constraint->applyImpulse();
+    }
 }
 
 void PhysicsWorld::applyGravity()
@@ -35,15 +56,15 @@ void PhysicsWorld::integrateAll(float dt)
 
 void PhysicsWorld::detectAndResolveCollisions()
 {
-    for (size_t i = 0; i < bodies.size(); i++)
+    grid.update(bodies);
+    auto potentialCollisions = grid.getPotentialCollisions();
+
+    for (const auto& pair : potentialCollisions)
     {
-        for (size_t j = i + 1; j < bodies.size(); j++)
+        Physics::Manifold manifold;
+        if (Physics::CollisionDetector::detect(pair.first, pair.second, manifold))
         {
-            Physics::Manifold manifold;
-            if (Physics::CollisionDetector::detect(bodies[i].get(), bodies[j].get(), manifold))
-            {
-                Physics::CollisionResolver::resolve(manifold);
-            }
+            Physics::CollisionResolver::resolve(manifold);
         }
     }
 }
@@ -54,7 +75,17 @@ void PhysicsWorld::addBody(std::unique_ptr<Physics::RigidBody> body)
     bodies.push_back(std::move(body));
 }
 
+void PhysicsWorld::addConstraint(std::unique_ptr<Physics::Constraint> constraint)
+{
+    constraints.push_back(std::move(constraint));
+}
+
 const std::vector<std::unique_ptr<Physics::RigidBody>>& PhysicsWorld::getBodies() const
 {
     return bodies;
+}
+
+const std::vector<std::unique_ptr<Physics::Constraint>>& PhysicsWorld::getConstraints() const
+{
+    return constraints;
 }

@@ -38,7 +38,7 @@ namespace Physics
         return height;
     }
 
-    std::array<sf::Vector2f, 4> BoxCollider::getVertices(const sf::Vector2f& position, float angle) const
+    std::array<Vector2, 4> BoxCollider::getVertices(const Vector2& position, float angle) const
     {
         float hw = width / 2.f;
         float hh = height / 2.f;
@@ -47,8 +47,8 @@ namespace Physics
         float sinA = std::sin(angle);
 
         // Local-space corners, rotated then translated
-        std::array<sf::Vector2f, 4> vertices;
-        sf::Vector2f corners[4] = {
+        std::array<Vector2, 4> vertices;
+        Vector2 corners[4] = {
             {-hw, -hh},
             { hw, -hh},
             { hw,  hh},
@@ -66,15 +66,16 @@ namespace Physics
         return vertices;
     }
 
-    std::array<sf::Vector2f, 2> BoxCollider::getEdgeNormals(float angle) const
+    std::array<Vector2, 2> BoxCollider::getEdgeNormals(float angle) const
     {
         float cosA = std::cos(angle);
         float sinA = std::sin(angle);
 
         // The two unique normals for a rectangle are the rotated X and Y axes
         return {
-            sf::Vector2f{ cosA, sinA},   // normal along rotated X-axis
-            sf::Vector2f{-sinA, cosA}    // normal along rotated Y-axis
+            Vector2{ cosA, sinA},   // normal along rotated X-axis
+            Vector2{-sinA, cosA}    // normal along rotated Y-axis
         };
     }
 }
+

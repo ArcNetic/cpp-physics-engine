@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector2.h"
 
 #include <SFML/System/Vector2.hpp>
 #include <memory>
@@ -9,21 +10,21 @@ namespace Physics
     class RigidBody
     {
     public:
-        RigidBody(sf::Vector2f position, float mass, std::unique_ptr<Shape> shape);
+        RigidBody(Vector2 position, float mass, std::unique_ptr<Shape> shape);
 
         // Physics integration (semi-implicit Euler)
         void integrate(float dt);
 
         // Force accumulation — cleared after each integration step
-        void applyForce(const sf::Vector2f& force);
+        void applyForce(const Vector2& force);
         void applyTorque(float torque);
 
         // Accessors
-        sf::Vector2f getPosition() const;
-        void setPosition(const sf::Vector2f& pos);
+        Vector2 getPosition() const;
+        void setPosition(const Vector2& pos);
 
-        sf::Vector2f getVelocity() const;
-        void setVelocity(const sf::Vector2f& vel);
+        Vector2 getVelocity() const;
+        void setVelocity(const Vector2& vel);
 
         float getAngularVelocity() const;
         void setAngularVelocity(float w);
@@ -46,9 +47,9 @@ namespace Physics
         bool isStatic() const;
 
     private:
-        sf::Vector2f position;
-        sf::Vector2f velocity;
-        sf::Vector2f forceAccumulator;
+        Vector2 position;
+        Vector2 velocity;
+        Vector2 forceAccumulator;
 
         float angle;
         float angularVelocity;
@@ -64,3 +65,4 @@ namespace Physics
         std::unique_ptr<Shape> shape;
     };
 }
+

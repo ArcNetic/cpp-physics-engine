@@ -7,18 +7,18 @@
 
 namespace Physics
 {
-    float CollisionDetector::dot(const sf::Vector2f& a, const sf::Vector2f& b)
+    float CollisionDetector::dot(const Vector2& a, const Vector2& b)
     {
         return a.x * b.x + a.y * b.y;
     }
 
-    float CollisionDetector::lengthSq(const sf::Vector2f& v)
+    float CollisionDetector::lengthSq(const Vector2& v)
     {
         return v.x * v.x + v.y * v.y;
     }
 
     CollisionDetector::Projection CollisionDetector::projectVertices(
-        const sf::Vector2f* vertices, int count, const sf::Vector2f& axis)
+        const Vector2* vertices, int count, const Vector2& axis)
     {
         float minProj = dot(vertices[0], axis);
         float maxProj = minProj;
@@ -34,13 +34,13 @@ namespace Physics
     }
 
     CollisionDetector::Projection CollisionDetector::projectCircle(
-        const sf::Vector2f& center, float radius, const sf::Vector2f& axis)
+        const Vector2& center, float radius, const Vector2& axis)
     {
         float centerProj = dot(center, axis);
         return {centerProj - radius, centerProj + radius};
     }
 
-    sf::Vector2f CollisionDetector::getSupportPoint(const std::array<sf::Vector2f, 4>& verts, const sf::Vector2f& dir)
+    Vector2 CollisionDetector::getSupportPoint(const std::array<Vector2, 4>& verts, const Vector2& dir)
     {
         float maxDot = dot(verts[0], dir);
         for (int i = 1; i < 4; i++)
@@ -52,7 +52,7 @@ namespace Physics
             }
         }
 
-        sf::Vector2f avgVert(0.f, 0.f);
+        Vector2 avgVert(0.f, 0.f);
         int count = 0;
         for (int i = 0; i < 4; i++)
         {
@@ -110,7 +110,7 @@ namespace Physics
         const auto* circleA = static_cast<const CircleCollider*>(a->getShape());
         const auto* circleB = static_cast<const CircleCollider*>(b->getShape());
 
-        sf::Vector2f diff = b->getPosition() - a->getPosition();
+        Vector2 diff = b->getPosition() - a->getPosition();
         float distSq = lengthSq(diff);
         float radiusSum = circleA->getRadius() + circleB->getRadius();
 
@@ -143,11 +143,11 @@ namespace Physics
         auto normalsB = boxB->getEdgeNormals(b->getAngle());
 
         float minOverlap = std::numeric_limits<float>::max();
-        sf::Vector2f bestAxis;
+        Vector2 bestAxis;
         bool bestAxisFromA = true;
 
         // Test all 4 axes (2 from each box)
-        auto testAxis = [&](const sf::Vector2f& axis, bool isA) -> bool
+        auto testAxis = [&](const Vector2& axis, bool isA) -> bool
         {
             Projection projA = projectVertices(vertsA.data(), 4, axis);
             Projection projB = projectVertices(vertsB.data(), 4, axis);
@@ -174,7 +174,7 @@ namespace Physics
 
         // All axes overlap — collision detected
         // Ensure normal points from A toward B
-        sf::Vector2f aToB = b->getPosition() - a->getPosition();
+        Vector2 aToB = b->getPosition() - a->getPosition();
         if (dot(bestAxis, aToB) < 0.f)
             bestAxis = -bestAxis;
 
@@ -206,16 +206,16 @@ namespace Physics
         const auto* circle = static_cast<const CircleCollider*>(circleBody->getShape());
         const auto* box = static_cast<const BoxCollider*>(boxBody->getShape());
 
-        sf::Vector2f circlePos = circleBody->getPosition();
+        Vector2 circlePos = circleBody->getPosition();
         float radius = circle->getRadius();
 
         auto verts = box->getVertices(boxBody->getPosition(), boxBody->getAngle());
         auto normals = box->getEdgeNormals(boxBody->getAngle());
 
         float minOverlap = std::numeric_limits<float>::max();
-        sf::Vector2f bestAxis;
+        Vector2 bestAxis;
 
-        auto testAxis = [&](const sf::Vector2f& axis) -> bool
+        auto testAxis = [&](const Vector2& axis) -> bool
         {
             Projection projBox = projectVertices(verts.data(), 4, axis);
             Projection projCircle = projectCircle(circlePos, radius, axis);
@@ -238,7 +238,7 @@ namespace Physics
 
         // Test axis from circle center to closest box vertex
         float closestDistSq = std::numeric_limits<float>::max();
-        sf::Vector2f closestVertex;
+        Vector2 closestVertex;
         for (const auto& v : verts)
         {
             float dSq = lengthSq(v - circlePos);
@@ -249,7 +249,7 @@ namespace Physics
             }
         }
 
-        sf::Vector2f vertexAxis = closestVertex - circlePos;
+        Vector2 vertexAxis = closestVertex - circlePos;
         float axisLen = std::sqrt(lengthSq(vertexAxis));
         if (axisLen > 0.0001f)
         {
@@ -258,7 +258,7 @@ namespace Physics
         }
 
         // All axes overlap — collision
-        sf::Vector2f aToB = boxBody->getPosition() - circleBody->getPosition();
+        Vector2 aToB = boxBody->getPosition() - circleBody->getPosition();
         if (dot(bestAxis, aToB) < 0.f)
             bestAxis = -bestAxis;
 
@@ -270,3 +270,4 @@ namespace Physics
         return true;
     }
 }
+

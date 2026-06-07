@@ -3,7 +3,7 @@
 
 namespace Physics
 {
-    RigidBody::RigidBody(sf::Vector2f position, float mass, std::unique_ptr<Shape> shape)
+    RigidBody::RigidBody(Vector2 position, float mass, std::unique_ptr<Shape> shape)
         : position(position),
           velocity({0.f, 0.f}),
           forceAccumulator({0.f, 0.f}),
@@ -33,7 +33,7 @@ namespace Physics
             return;
 
         // Semi-implicit Euler: update velocity first, then position
-        sf::Vector2f acceleration = forceAccumulator * inverseMass;
+        Vector2 acceleration = forceAccumulator * inverseMass;
         velocity += acceleration * dt;
         position += velocity * dt;
 
@@ -52,7 +52,7 @@ namespace Physics
         torqueAccumulator = 0.f;
     }
 
-    void RigidBody::applyForce(const sf::Vector2f& force)
+    void RigidBody::applyForce(const Vector2& force)
     {
         forceAccumulator += force;
     }
@@ -62,22 +62,22 @@ namespace Physics
         torqueAccumulator += torque;
     }
 
-    sf::Vector2f RigidBody::getPosition() const
+    Vector2 RigidBody::getPosition() const
     {
         return position;
     }
 
-    void RigidBody::setPosition(const sf::Vector2f& pos)
+    void RigidBody::setPosition(const Vector2& pos)
     {
         position = pos;
     }
 
-    sf::Vector2f RigidBody::getVelocity() const
+    Vector2 RigidBody::getVelocity() const
     {
         return velocity;
     }
 
-    void RigidBody::setVelocity(const sf::Vector2f& vel)
+    void RigidBody::setVelocity(const Vector2& vel)
     {
         velocity = vel;
     }
@@ -142,3 +142,4 @@ namespace Physics
         return inverseMass == 0.f;
     }
 }
+

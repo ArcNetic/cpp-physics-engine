@@ -1,8 +1,15 @@
 #include "Renderer.h"
 #include "../physics/CircleBody.h"
 #include "../physics/BoxShape.h"
+#include "../physics/DistanceJoint.h"
 #include "../physics/Constants.h"
 #include <cmath>
+
+namespace {
+    sf::Vector2f toSFML(const Physics::Vector2& v) {
+        return sf::Vector2f(v.x, v.y);
+    }
+}
 
 Renderer::Renderer(sf::RenderWindow& window)
     : window(window)
@@ -33,6 +40,24 @@ void Renderer::drawBodies(const std::vector<std::unique_ptr<Physics::RigidBody>>
     }
 }
 
+void Renderer::drawConstraints(const std::vector<std::unique_ptr<Physics::Constraint>>& constraints)
+{
+    for (const auto& c : constraints)
+    {
+        if (const auto* joint = dynamic_cast<const Physics::DistanceJoint*>(c.get()))
+        {
+            sf::Vector2f pA = toSFML(joint->getWorldAnchorA());
+            sf::Vector2f pB = toSFML(joint->getWorldAnchorB());
+
+            sf::Vertex line[] = {
+                sf::Vertex{pA, sf::Color(0, 255, 255, 150)}, // Cyan, semi-transparent
+                sf::Vertex{pB, sf::Color(0, 255, 255, 150)}
+            };
+            window.draw(line, 2, sf::PrimitiveType::Lines);
+        }
+    }
+}
+
 void Renderer::setDebugDraw(bool enabled)
 {
     debugDraw = enabled;
@@ -50,7 +75,7 @@ void Renderer::drawCircleBody(const Physics::RigidBody& body)
 
     sf::CircleShape shape(r);
     shape.setOrigin({r, r});
-    shape.setPosition(body.getPosition());
+    shape.setPosition(toSFML(body.getPosition()));
     shape.setFillColor(sf::Color::White);
     window.draw(shape);
 }
@@ -61,7 +86,7 @@ void Renderer::drawBoxBody(const Physics::RigidBody& body)
 
     sf::RectangleShape shape({box->getWidth(), box->getHeight()});
     shape.setOrigin({box->getWidth() / 2.f, box->getHeight() / 2.f});
-    shape.setPosition(body.getPosition());
+    shape.setPosition(toSFML(body.getPosition()));
     shape.setRotation(sf::radians(body.getAngle()));
     shape.setFillColor(sf::Color::White);
     window.draw(shape);
@@ -69,8 +94,8 @@ void Renderer::drawBoxBody(const Physics::RigidBody& body)
 
 void Renderer::drawVelocityVector(const Physics::RigidBody& body)
 {
-    sf::Vector2f pos = body.getPosition();
-    sf::Vector2f vel = body.getVelocity();
+    sf::Vector2f pos = toSFML(body.getPosition());
+    sf::Vector2f vel = toSFML(body.getVelocity());
 
     // Scale velocity for visibility
     float scale = 0.05f;
@@ -93,7 +118,7 @@ void Renderer::drawBoundingCircle(const Physics::RigidBody& body)
 
     sf::CircleShape outline(boundingRadius);
     outline.setOrigin({boundingRadius, boundingRadius});
-    outline.setPosition(body.getPosition());
+    outline.setPosition(toSFML(body.getPosition()));
     outline.setFillColor(sf::Color::Transparent);
     outline.setOutlineColor(sf::Color(255, 255, 0, 80)); // Semi-transparent yellow
     outline.setOutlineThickness(1.f);

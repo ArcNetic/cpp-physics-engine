@@ -21,6 +21,8 @@ add_executable(PhysicsSandbox
     src/physics/PhysicsWorld.cpp
     src/physics/CollisionDetector.cpp
     src/physics/CollisionResolver.cpp
+    src/physics/DistanceJoint.cpp
+    src/physics/SpatialGrid.cpp
     src/renderer/Renderer.cpp
 )
 

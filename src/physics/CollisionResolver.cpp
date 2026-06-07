@@ -5,14 +5,14 @@
 
 namespace
 {
-    float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b)
+    float crossProduct(const Physics::Vector2& a, const Physics::Vector2& b)
     {
         return a.x * b.y - a.y * b.x;
     }
 
-    sf::Vector2f crossProduct(float a, const sf::Vector2f& v)
+    Physics::Vector2 crossProduct(float a, const Physics::Vector2& v)
     {
-        return sf::Vector2f(-a * v.y, a * v.x);
+        return Physics::Vector2(-a * v.y, a * v.x);
     }
 }
 
@@ -34,7 +34,7 @@ namespace Physics
         if (totalInvMass <= 0.f)
             return;
 
-        sf::Vector2f correction = manifold.normal * (manifold.penetration / totalInvMass);
+        Vector2 correction = manifold.normal * (manifold.penetration / totalInvMass);
         a->setPosition(a->getPosition() - correction * a->getInverseMass());
         b->setPosition(b->getPosition() + correction * b->getInverseMass());
     }
@@ -44,12 +44,12 @@ namespace Physics
         RigidBody* a = manifold.a;
         RigidBody* b = manifold.b;
 
-        sf::Vector2f rA = manifold.contactPoint - a->getPosition();
-        sf::Vector2f rB = manifold.contactPoint - b->getPosition();
+        Vector2 rA = manifold.contactPoint - a->getPosition();
+        Vector2 rB = manifold.contactPoint - b->getPosition();
 
-        sf::Vector2f velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
-        sf::Vector2f velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
-        sf::Vector2f relVel = velB - velA;
+        Vector2 velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
+        Vector2 velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
+        Vector2 relVel = velB - velA;
 
         float velAlongNormal = relVel.x * manifold.normal.x + relVel.y * manifold.normal.y;
 
@@ -70,7 +70,7 @@ namespace Physics
         float e = std::min(a->getRestitution(), b->getRestitution());
         float impulseMag = -(1.f + e) * velAlongNormal / invMassSum;
 
-        sf::Vector2f impulse = manifold.normal * impulseMag;
+        Vector2 impulse = manifold.normal * impulseMag;
 
         a->setVelocity(a->getVelocity() - impulse * a->getInverseMass());
         a->setAngularVelocity(a->getAngularVelocity() - crossProduct(rA, impulse) * a->getInverseInertia());
@@ -84,16 +84,16 @@ namespace Physics
         RigidBody* a = manifold.a;
         RigidBody* b = manifold.b;
 
-        sf::Vector2f rA = manifold.contactPoint - a->getPosition();
-        sf::Vector2f rB = manifold.contactPoint - b->getPosition();
+        Vector2 rA = manifold.contactPoint - a->getPosition();
+        Vector2 rB = manifold.contactPoint - b->getPosition();
 
-        sf::Vector2f velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
-        sf::Vector2f velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
-        sf::Vector2f relVel = velB - velA;
+        Vector2 velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
+        Vector2 velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
+        Vector2 relVel = velB - velA;
 
         float velAlongNormal = relVel.x * manifold.normal.x + relVel.y * manifold.normal.y;
 
-        sf::Vector2f tangent = relVel - manifold.normal * velAlongNormal;
+        Vector2 tangent = relVel - manifold.normal * velAlongNormal;
 
         float tangentLength = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
         if (tangentLength < 0.0001f)
@@ -123,7 +123,7 @@ namespace Physics
         float normalImpulseMag = std::abs(-(1.f + std::min(a->getRestitution(), b->getRestitution()))
                                           * velAlongNormal / normalInvMassSum);
 
-        sf::Vector2f frictionImpulse;
+        Vector2 frictionImpulse;
         if (std::abs(frictionMag) < normalImpulseMag * Constants::FRICTION_STATIC)
         {
             frictionImpulse = tangent * frictionMag;
@@ -141,3 +141,4 @@ namespace Physics
         b->setAngularVelocity(b->getAngularVelocity() + crossProduct(rB, frictionImpulse) * b->getInverseInertia());
     }
 }
+
