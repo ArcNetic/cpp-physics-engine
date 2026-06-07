@@ -12,7 +12,7 @@ private:
 public:
     void update(float dt);
 
-    void render(sf::RenderWindow& window);
+    void render(sf::RenderWindow &window);
 
     void addball(const Ball &ball);
 

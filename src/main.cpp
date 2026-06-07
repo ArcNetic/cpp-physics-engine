@@ -5,28 +5,26 @@
 #include <vector>
 #include "physics/Ball.h"
 #include "physics/PhysicsWorld.h"
+#include "physics/Constants.h"
 
 int main()
 {
     sf::RenderWindow window(sf::VideoMode({800, 600}), "Physics Sandbox");
 
-    // Floor
-    const float floorY = 500.f;
+    constexpr auto floorY =
+        Constants::FLOOR_Y;
 
-    // Gravity Acceleration
-    const float gravity = 980.f;
+    constexpr auto gravity =
+        Constants::GRAVITY;
 
-    // Co-efficient of restituion
-    const float e = 0.7f;
+    constexpr auto e =
+        Constants::RESTITUTION;
 
-    // SleepThreshold
-    const float sleepThreshold = 30.f;
+    constexpr auto sleepThreshold =
+        Constants::SLEEP_THRESHOLD;
 
     // clock for dt
     sf::Clock clock;
-
-    // Multiple balls
-    // std::vector<Ball> balls;  NOT NEEDED ANYMORE
 
     // Draw floor
     sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
@@ -53,7 +51,6 @@ int main()
                 if (mousepressed->button == sf::Mouse::Button::Left)
                 {
                     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    //balls.emplace_back(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f);
                     world.addball(Ball(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f));
                 }
             }

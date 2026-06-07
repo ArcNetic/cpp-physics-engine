@@ -6,7 +6,7 @@ void PhysicsWorld::update(float dt)
 
 void PhysicsWorld::render(sf::RenderWindow &window)
 {
-    for (auto& ball: balls)
+    for (auto &ball : balls)
     {
         ball.render(window);
     }
