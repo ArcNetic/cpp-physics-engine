@@ -4,6 +4,7 @@
 Ball::Ball(float x, float y, float radius) : radius(radius)
 {
     shape.setRadius(radius);
+    shape.setOrigin({radius, radius});
     shape.setPosition({x, y});
 
     velocity = {0.f, 0.f};

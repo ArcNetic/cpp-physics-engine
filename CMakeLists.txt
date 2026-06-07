@@ -4,6 +4,7 @@ project(PhysicsSandbox)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SFML COMPONENTS
     Graphics
@@ -18,7 +19,6 @@ add_executable(PhysicsSandbox
     src/physics/RigidBody.cpp
     src/physics/CircleBody.cpp
     src/physics/PhysicsWorld.cpp
-    src/physics/CircleBody.cpp
 )
 
 target_link_libraries(PhysicsSandbox PRIVATE

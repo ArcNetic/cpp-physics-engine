@@ -14,7 +14,7 @@ public:
 
     void render(sf::RenderWindow &window);
 
-    void addball(const Ball &ball);
+    void addBall(const Ball &ball);
 
     std::vector<Ball> &getBalls();
 };

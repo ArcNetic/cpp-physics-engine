@@ -3,7 +3,7 @@
 namespace Constants
 {
     // Floor
-    constexpr float FLOOR_Y = 500.f;
+    constexpr float FLOOR_Y = 550.f;
 
     // Gravity Acceleration
     constexpr float GRAVITY = 980.f;
