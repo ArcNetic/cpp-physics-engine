@@ -26,7 +26,7 @@ int main()
     sf::Clock clock;
 
     // Multiple balls
-    std::vector<Ball> balls;
+    // std::vector<Ball> balls;  NOT NEEDED ANYMORE
 
     // Draw floor
     sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
@@ -53,37 +53,38 @@ int main()
                 if (mousepressed->button == sf::Mouse::Button::Left)
                 {
                     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    balls.emplace_back(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f);
+                    //balls.emplace_back(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f);
+                    world.addball(Ball(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f));
                 }
             }
         }
 
         // Update all balls
-        for (Ball &ball : balls)
+        for (Ball &ball : world.getBalls())
         {
             ball.update(dt, gravity, floorY, e, sleepThreshold);
         }
 
         // default color
-        for (Ball &ball : balls)
+        for (Ball &ball : world.getBalls())
         {
             ball.setColor(sf::Color::White);
         }
 
         // check for collisions
-        for (size_t i = 0; i < balls.size(); i++)
+        for (size_t i = 0; i < world.getBalls().size(); i++)
         {
-            for (size_t j = i + 1; j < balls.size(); j++)
+            for (size_t j = i + 1; j < world.getBalls().size(); j++)
             {
                 world.update(dt);
 
-                sf::Vector2f posA = balls[i].getPosition();
+                sf::Vector2f posA = world.getBalls()[i].getPosition();
 
-                sf::Vector2f posB = balls[j].getPosition();
+                sf::Vector2f posB = world.getBalls()[j].getPosition();
 
-                float radiusA = balls[i].getRadius();
+                float radiusA = world.getBalls()[i].getRadius();
 
-                float radiusB = balls[j].getRadius();
+                float radiusB = world.getBalls()[j].getRadius();
 
                 float dx = posB.x - posA.x;
 
@@ -102,11 +103,11 @@ int main()
                     // Push balls equally apart
                     sf::Vector2f correction = collisionNormal * (overlap / 2.f);
 
-                    balls[i].setPosition(posA - correction);
-                    balls[j].setPosition(posB + correction);
+                    world.getBalls()[i].setPosition(posA - correction);
+                    world.getBalls()[j].setPosition(posB + correction);
 
-                    sf::Vector2f velocityA = balls[i].getVelocity();
-                    sf::Vector2f velocityB = balls[j].getVelocity();
+                    sf::Vector2f velocityA = world.getBalls()[i].getVelocity();
+                    sf::Vector2f velocityB = world.getBalls()[j].getVelocity();
 
                     sf::Vector2f relativeVelocity = velocityB - velocityA;
 
@@ -121,8 +122,8 @@ int main()
                         impulse /= 2.f;
 
                         sf::Vector2f impulseVector = collisionNormal * impulse;
-                        balls[i].setVelocity(velocityA - impulseVector);
-                        balls[j].setVelocity(velocityB + impulseVector);
+                        world.getBalls()[i].setVelocity(velocityA - impulseVector);
+                        world.getBalls()[j].setVelocity(velocityB + impulseVector);
                     }
                 }
             }
@@ -132,7 +133,7 @@ int main()
         window.clear();
 
         window.draw(floor);
-        for (Ball &ball : balls)
+        for (Ball &ball : world.getBalls())
         {
             ball.render(window);
         }
