@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <optional>
-#include "physics/Ball.h"
+#include <memory>
+#include "physics/RigidBody.h"
+#include "physics/CircleBody.h"
 #include "physics/PhysicsWorld.h"
 #include "physics/Constants.h"
 
@@ -13,7 +15,7 @@ int main()
 
     // Draw floor
     sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
-    floor.setPosition({0.f, 550.f});
+    floor.setPosition({0.f, Constants::FLOOR_Y});
     floor.setFillColor(sf::Color::White);
 
     PhysicsWorld world;
@@ -36,7 +38,18 @@ int main()
                 if (mousepressed->button == sf::Mouse::Button::Left)
                 {
                     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    world.addBall(Ball(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f));
+
+                    float radius = 50.f;
+                    float mass = 1.f;
+
+                    auto shape = std::make_unique<Physics::CircleCollider>(radius);
+                    auto body = std::make_unique<Physics::RigidBody>(
+                        sf::Vector2f(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y)),
+                        mass,
+                        std::move(shape)
+                    );
+
+                    world.addBody(std::move(body));
                 }
             }
         }

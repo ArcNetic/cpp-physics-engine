@@ -1,20 +1,26 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include "Ball.h"
+#include <memory>
+#include "RigidBody.h"
 
 class PhysicsWorld
 {
-
-private:
-    std::vector<Ball> balls;
-
 public:
     void update(float dt);
 
-    void render(sf::RenderWindow &window);
+    void render(sf::RenderWindow& window);
 
-    void addBall(const Ball &ball);
+    void addBody(std::unique_ptr<Physics::RigidBody> body);
 
-    std::vector<Ball> &getBalls();
+    const std::vector<std::unique_ptr<Physics::RigidBody>>& getBodies() const;
+
+private:
+    std::vector<std::unique_ptr<Physics::RigidBody>> bodies;
+
+    // Collision helpers
+    void applyGravity();
+    void integrateAll(float dt);
+    void detectAndResolveCollisions();
+    void enforceFloorConstraint();
 };

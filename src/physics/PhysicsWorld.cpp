@@ -1,92 +1,162 @@
 #include "PhysicsWorld.h"
+#include "CircleBody.h"
 #include "Constants.h"
 #include <cmath>
+#include <algorithm>
 
 void PhysicsWorld::update(float dt)
 {
-    // Update all balls (gravity + floor collision)
-    for (Ball &ball : balls)
-    {
-        ball.update(dt, Constants::GRAVITY, Constants::FLOOR_Y, Constants::RESTITUTION, Constants::SLEEP_THRESHOLD);
-    }
+    applyGravity();
+    integrateAll(dt);
+    detectAndResolveCollisions();
+    enforceFloorConstraint();
+}
 
-    // Reset colors to default
-    for (Ball &ball : balls)
+void PhysicsWorld::applyGravity()
+{
+    for (auto& body : bodies)
     {
-        ball.setColor(sf::Color::White);
-    }
-
-    // Check for collisions between all ball pairs
-    for (size_t i = 0; i < balls.size(); i++)
-    {
-        for (size_t j = i + 1; j < balls.size(); j++)
+        if (!body->isStatic())
         {
-            sf::Vector2f posA = balls[i].getPosition();
-            sf::Vector2f posB = balls[j].getPosition();
-
-            float radiusA = balls[i].getRadius();
-            float radiusB = balls[j].getRadius();
-
-            float dx = posB.x - posA.x;
-            float dy = posB.y - posA.y;
-
-            float distance = std::sqrt(dx * dx + dy * dy);
-            float minDistance = radiusA + radiusB;
-
-            // Guard against divide-by-zero when balls overlap exactly
-            if (distance < 0.0001f)
-            {
-                continue;
-            }
-
-            // Collision detected
-            if (distance < minDistance)
-            {
-                float overlap = minDistance - distance;
-                sf::Vector2f collisionNormal{dx / distance, dy / distance};
-
-                // Push balls equally apart
-                sf::Vector2f correction = collisionNormal * (overlap / 2.f);
-
-                balls[i].setPosition(posA - correction);
-                balls[j].setPosition(posB + correction);
-
-                sf::Vector2f velocityA = balls[i].getVelocity();
-                sf::Vector2f velocityB = balls[j].getVelocity();
-
-                sf::Vector2f relativeVelocity = velocityB - velocityA;
-
-                float velocityAlongNormal = relativeVelocity.x * collisionNormal.x + relativeVelocity.y * collisionNormal.y;
-                if (velocityAlongNormal > 0) // already separating
-                {
-                    continue;
-                }
-
-                float impulse = -(1.f + Constants::RESTITUTION) * velocityAlongNormal;
-                impulse /= 2.f; // equal mass assumption
-
-                sf::Vector2f impulseVector = collisionNormal * impulse;
-                balls[i].setVelocity(velocityA - impulseVector);
-                balls[j].setVelocity(velocityB + impulseVector);
-            }
+            // F = m * g (downward)
+            body->applyForce({0.f, Constants::GRAVITY * body->getMass()});
         }
     }
 }
 
-void PhysicsWorld::render(sf::RenderWindow &window)
+void PhysicsWorld::integrateAll(float dt)
 {
-    for (auto &ball : balls)
+    for (auto& body : bodies)
     {
-        ball.render(window);
+        body->integrate(dt);
     }
 }
 
-void PhysicsWorld::addBall(const Ball &ball)
+void PhysicsWorld::detectAndResolveCollisions()
 {
-    balls.push_back(ball);
+    for (size_t i = 0; i < bodies.size(); i++)
+    {
+        for (size_t j = i + 1; j < bodies.size(); j++)
+        {
+            Physics::RigidBody* a = bodies[i].get();
+            Physics::RigidBody* b = bodies[j].get();
+
+            // Currently only circle-circle collisions
+            const auto* shapeA = dynamic_cast<const Physics::CircleCollider*>(a->getShape());
+            const auto* shapeB = dynamic_cast<const Physics::CircleCollider*>(b->getShape());
+            if (!shapeA || !shapeB)
+                continue;
+
+            sf::Vector2f posA = a->getPosition();
+            sf::Vector2f posB = b->getPosition();
+
+            float radiusA = shapeA->getRadius();
+            float radiusB = shapeB->getRadius();
+
+            float dx = posB.x - posA.x;
+            float dy = posB.y - posA.y;
+
+            float distSq = dx * dx + dy * dy;
+            float minDist = radiusA + radiusB;
+
+            // Early-out: no collision
+            if (distSq >= minDist * minDist)
+                continue;
+
+            float distance = std::sqrt(distSq);
+
+            // Guard against divide-by-zero when bodies overlap exactly
+            if (distance < 0.0001f)
+                continue;
+
+            float overlap = minDist - distance;
+            sf::Vector2f normal{dx / distance, dy / distance};
+
+            // --- Positional correction (mass-weighted) ---
+            float totalInvMass = a->getInverseMass() + b->getInverseMass();
+            if (totalInvMass > 0.f)
+            {
+                sf::Vector2f correction = normal * (overlap / totalInvMass);
+                a->setPosition(posA - correction * a->getInverseMass());
+                b->setPosition(posB + correction * b->getInverseMass());
+            }
+
+            // --- Impulse-based velocity resolution ---
+            sf::Vector2f velA = a->getVelocity();
+            sf::Vector2f velB = b->getVelocity();
+            sf::Vector2f relativeVel = velB - velA;
+
+            float velAlongNormal = relativeVel.x * normal.x + relativeVel.y * normal.y;
+
+            // Already separating
+            if (velAlongNormal > 0.f)
+                continue;
+
+            // Restitution: use minimum of the two bodies
+            float e = std::min(a->getRestitution(), b->getRestitution());
+
+            // Impulse scalar: j = -(1+e) * Vrel·n / (1/mA + 1/mB)
+            float impulseMag = -(1.f + e) * velAlongNormal / totalInvMass;
+
+            sf::Vector2f impulse = normal * impulseMag;
+            a->setVelocity(velA - impulse * a->getInverseMass());
+            b->setVelocity(velB + impulse * b->getInverseMass());
+        }
+    }
 }
 
-std::vector<Ball> &PhysicsWorld::getBalls()
+void PhysicsWorld::enforceFloorConstraint()
 {
-    return balls;
+    for (auto& body : bodies)
+    {
+        const auto* circle = dynamic_cast<const Physics::CircleCollider*>(body->getShape());
+        if (!circle)
+            continue;
+
+        sf::Vector2f pos = body->getPosition();
+        float radius = circle->getRadius();
+
+        if (pos.y + radius >= Constants::FLOOR_Y)
+        {
+            pos.y = Constants::FLOOR_Y - radius;
+            body->setPosition(pos);
+
+            sf::Vector2f vel = body->getVelocity();
+            vel.y *= -body->getRestitution();
+
+            // Sleep threshold: stop micro-bouncing
+            if (std::abs(vel.y) < Constants::SLEEP_THRESHOLD)
+            {
+                vel.y = 0.f;
+            }
+
+            body->setVelocity(vel);
+        }
+    }
+}
+
+void PhysicsWorld::render(sf::RenderWindow& window)
+{
+    for (const auto& body : bodies)
+    {
+        const auto* circle = dynamic_cast<const Physics::CircleCollider*>(body->getShape());
+        if (circle)
+        {
+            sf::CircleShape shape(circle->getRadius());
+            shape.setOrigin({circle->getRadius(), circle->getRadius()});
+            shape.setPosition(body->getPosition());
+            shape.setFillColor(sf::Color::White);
+            window.draw(shape);
+        }
+    }
+}
+
+void PhysicsWorld::addBody(std::unique_ptr<Physics::RigidBody> body)
+{
+    bodies.push_back(std::move(body));
+}
+
+const std::vector<std::unique_ptr<Physics::RigidBody>>& PhysicsWorld::getBodies() const
+{
+    return bodies;
 }
