@@ -15,6 +15,10 @@ find_package(SFML COMPONENTS
 add_executable(PhysicsSandbox
     src/main.cpp
     src/physics/Ball.cpp
+    src/physics/RigidBody.cpp
+    src/physics/CircleBody.cpp
+    src/physics/PhysicsWorld.cpp
+    src/physics/CircleBody.cpp
 )
 
 target_link_libraries(PhysicsSandbox PRIVATE

@@ -4,12 +4,11 @@
 #include <cmath>
 #include <vector>
 #include "physics/Ball.h"
+#include "physics/PhysicsWorld.h"
 
 int main()
 {
-    sf::RenderWindow window(
-        sf::VideoMode({800, 600}),
-        "Physics Sandbox");
+    sf::RenderWindow window(sf::VideoMode({800, 600}), "Physics Sandbox");
 
     // Floor
     const float floorY = 500.f;
@@ -34,6 +33,8 @@ int main()
     floor.setPosition({0.f, 550.f});
     floor.setFillColor(sf::Color::White);
 
+    PhysicsWorld world;
+
     while (window.isOpen())
     {
         float dt = clock.restart().asSeconds(); // time since the last frame
@@ -51,8 +52,7 @@ int main()
             {
                 if (mousepressed->button == sf::Mouse::Button::Left)
                 {
-                    sf::Vector2i mousePos =
-                        sf::Mouse::getPosition(window);
+                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
                     balls.emplace_back(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y), 50.f);
                 }
             }
@@ -67,8 +67,7 @@ int main()
         // default color
         for (Ball &ball : balls)
         {
-            ball.setColor(
-                sf::Color::White);
+            ball.setColor(sf::Color::White);
         }
 
         // check for collisions
@@ -76,6 +75,8 @@ int main()
         {
             for (size_t j = i + 1; j < balls.size(); j++)
             {
+                world.update(dt);
+
                 sf::Vector2f posA = balls[i].getPosition();
 
                 sf::Vector2f posB = balls[j].getPosition();
