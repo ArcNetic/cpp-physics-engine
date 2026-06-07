@@ -17,5 +17,8 @@ namespace Physics
 
         // Bounding radius for broad-phase collision checks
         virtual float getBoundingRadius() const = 0;
+
+        // Compute moment of inertia for rotational physics
+        virtual float computeMomentOfInertia(float mass) const = 0;
     };
 }

@@ -40,6 +40,31 @@ namespace Physics
         return {centerProj - radius, centerProj + radius};
     }
 
+    sf::Vector2f CollisionDetector::getSupportPoint(const std::array<sf::Vector2f, 4>& verts, const sf::Vector2f& dir)
+    {
+        float maxDot = dot(verts[0], dir);
+        for (int i = 1; i < 4; i++)
+        {
+            float d = dot(verts[i], dir);
+            if (d > maxDot)
+            {
+                maxDot = d;
+            }
+        }
+
+        sf::Vector2f avgVert(0.f, 0.f);
+        int count = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            if (std::abs(dot(verts[i], dir) - maxDot) < 0.01f)
+            {
+                avgVert += verts[i];
+                count++;
+            }
+        }
+        return avgVert / static_cast<float>(count);
+    }
+
     // ---- Dispatch ----
 
     bool CollisionDetector::detect(RigidBody* a, RigidBody* b, Manifold& out)
@@ -100,6 +125,7 @@ namespace Physics
         out.b = b;
         out.normal = diff / distance;
         out.penetration = radiusSum - distance;
+        out.contactPoint = a->getPosition() + out.normal * (circleA->getRadius() - out.penetration * 0.5f);
         return true;
     }
 
@@ -118,9 +144,10 @@ namespace Physics
 
         float minOverlap = std::numeric_limits<float>::max();
         sf::Vector2f bestAxis;
+        bool bestAxisFromA = true;
 
         // Test all 4 axes (2 from each box)
-        auto testAxis = [&](const sf::Vector2f& axis) -> bool
+        auto testAxis = [&](const sf::Vector2f& axis, bool isA) -> bool
         {
             Projection projA = projectVertices(vertsA.data(), 4, axis);
             Projection projB = projectVertices(vertsB.data(), 4, axis);
@@ -134,15 +161,16 @@ namespace Physics
             {
                 minOverlap = overlap;
                 bestAxis = axis;
+                bestAxisFromA = isA;
             }
             return true; // Overlap on this axis
         };
 
         for (const auto& n : normalsA)
-            if (!testAxis(n)) return false;
+            if (!testAxis(n, true)) return false;
 
         for (const auto& n : normalsB)
-            if (!testAxis(n)) return false;
+            if (!testAxis(n, false)) return false;
 
         // All axes overlap — collision detected
         // Ensure normal points from A toward B
@@ -154,6 +182,20 @@ namespace Physics
         out.b = b;
         out.normal = bestAxis;
         out.penetration = minOverlap;
+
+        if (bestAxisFromA)
+        {
+            // A is the reference shape, B is the incident shape.
+            // Contact point should be the deepest point on B.
+            out.contactPoint = getSupportPoint(vertsB, -bestAxis);
+        }
+        else
+        {
+            // B is the reference shape, A is the incident shape.
+            // Contact point should be the deepest point on A.
+            out.contactPoint = getSupportPoint(vertsA, bestAxis);
+        }
+
         return true;
     }
 
@@ -224,6 +266,7 @@ namespace Physics
         out.b = boxBody;
         out.normal = bestAxis;
         out.penetration = minOverlap;
+        out.contactPoint = circlePos + bestAxis * (radius - minOverlap * 0.5f);
         return true;
     }
 }

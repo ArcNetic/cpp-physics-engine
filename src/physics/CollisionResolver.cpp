@@ -3,6 +3,19 @@
 #include <cmath>
 #include <algorithm>
 
+namespace
+{
+    float crossProduct(const sf::Vector2f& a, const sf::Vector2f& b)
+    {
+        return a.x * b.y - a.y * b.x;
+    }
+
+    sf::Vector2f crossProduct(float a, const sf::Vector2f& v)
+    {
+        return sf::Vector2f(-a * v.y, a * v.x);
+    }
+}
+
 namespace Physics
 {
     void CollisionResolver::resolve(Manifold& manifold)
@@ -31,12 +44,11 @@ namespace Physics
         RigidBody* a = manifold.a;
         RigidBody* b = manifold.b;
 
-        float totalInvMass = a->getInverseMass() + b->getInverseMass();
-        if (totalInvMass <= 0.f)
-            return;
+        sf::Vector2f rA = manifold.contactPoint - a->getPosition();
+        sf::Vector2f rB = manifold.contactPoint - b->getPosition();
 
-        sf::Vector2f velA = a->getVelocity();
-        sf::Vector2f velB = b->getVelocity();
+        sf::Vector2f velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
+        sf::Vector2f velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
         sf::Vector2f relVel = velB - velA;
 
         float velAlongNormal = relVel.x * manifold.normal.x + relVel.y * manifold.normal.y;
@@ -45,14 +57,26 @@ namespace Physics
         if (velAlongNormal > 0.f)
             return;
 
-        float e = std::min(a->getRestitution(), b->getRestitution());
+        float rnA = crossProduct(rA, manifold.normal);
+        float rnB = crossProduct(rB, manifold.normal);
 
-        // Impulse magnitude: j = -(1+e) * Vrel·n / (1/mA + 1/mB)
-        float impulseMag = -(1.f + e) * velAlongNormal / totalInvMass;
+        float invMassSum = a->getInverseMass() + b->getInverseMass() +
+                           (rnA * rnA * a->getInverseInertia()) +
+                           (rnB * rnB * b->getInverseInertia());
+
+        if (invMassSum <= 0.f)
+            return;
+
+        float e = std::min(a->getRestitution(), b->getRestitution());
+        float impulseMag = -(1.f + e) * velAlongNormal / invMassSum;
 
         sf::Vector2f impulse = manifold.normal * impulseMag;
-        a->setVelocity(velA - impulse * a->getInverseMass());
-        b->setVelocity(velB + impulse * b->getInverseMass());
+
+        a->setVelocity(a->getVelocity() - impulse * a->getInverseMass());
+        a->setAngularVelocity(a->getAngularVelocity() - crossProduct(rA, impulse) * a->getInverseInertia());
+
+        b->setVelocity(b->getVelocity() + impulse * b->getInverseMass());
+        b->setAngularVelocity(b->getAngularVelocity() + crossProduct(rB, impulse) * b->getInverseInertia());
     }
 
     void CollisionResolver::applyFrictionImpulse(Manifold& manifold)
@@ -60,48 +84,60 @@ namespace Physics
         RigidBody* a = manifold.a;
         RigidBody* b = manifold.b;
 
-        float totalInvMass = a->getInverseMass() + b->getInverseMass();
-        if (totalInvMass <= 0.f)
-            return;
+        sf::Vector2f rA = manifold.contactPoint - a->getPosition();
+        sf::Vector2f rB = manifold.contactPoint - b->getPosition();
 
-        sf::Vector2f velA = a->getVelocity();
-        sf::Vector2f velB = b->getVelocity();
+        sf::Vector2f velA = a->getVelocity() + crossProduct(a->getAngularVelocity(), rA);
+        sf::Vector2f velB = b->getVelocity() + crossProduct(b->getAngularVelocity(), rB);
         sf::Vector2f relVel = velB - velA;
 
-        // Project relative velocity onto the collision normal
         float velAlongNormal = relVel.x * manifold.normal.x + relVel.y * manifold.normal.y;
 
-        // Tangent = relative velocity minus the normal component
         sf::Vector2f tangent = relVel - manifold.normal * velAlongNormal;
 
         float tangentLength = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
         if (tangentLength < 0.0001f)
-            return; // No tangential velocity to reduce
+            return;
 
-        tangent = tangent / tangentLength; // Normalize
+        tangent = tangent / tangentLength;
 
-        // Tangential impulse magnitude
-        float frictionMag = -(relVel.x * tangent.x + relVel.y * tangent.y) / totalInvMass;
+        float rtA = crossProduct(rA, tangent);
+        float rtB = crossProduct(rB, tangent);
 
-        // Compute the normal impulse magnitude for Coulomb clamping
+        float invMassSum = a->getInverseMass() + b->getInverseMass() +
+                           (rtA * rtA * a->getInverseInertia()) +
+                           (rtB * rtB * b->getInverseInertia());
+
+        if (invMassSum <= 0.f)
+            return;
+
+        float frictionMag = -(relVel.x * tangent.x + relVel.y * tangent.y) / invMassSum;
+
+        // Recompute normal impulse mass sum to clamp friction
+        float rnA = crossProduct(rA, manifold.normal);
+        float rnB = crossProduct(rB, manifold.normal);
+        float normalInvMassSum = a->getInverseMass() + b->getInverseMass() +
+                                 (rnA * rnA * a->getInverseInertia()) +
+                                 (rnB * rnB * b->getInverseInertia());
+
         float normalImpulseMag = std::abs(-(1.f + std::min(a->getRestitution(), b->getRestitution()))
-                                          * velAlongNormal / totalInvMass);
+                                          * velAlongNormal / normalInvMassSum);
 
-        // Coulomb's law: use static friction if within threshold, otherwise dynamic
         sf::Vector2f frictionImpulse;
         if (std::abs(frictionMag) < normalImpulseMag * Constants::FRICTION_STATIC)
         {
-            // Static friction: apply full tangential impulse
             frictionImpulse = tangent * frictionMag;
         }
         else
         {
-            // Dynamic friction: clamp to μ_d * |normalImpulse|
             float sign = (frictionMag > 0.f) ? 1.f : -1.f;
             frictionImpulse = tangent * (sign * normalImpulseMag * Constants::FRICTION_DYNAMIC);
         }
 
-        a->setVelocity(velA - frictionImpulse * a->getInverseMass());
-        b->setVelocity(velB + frictionImpulse * b->getInverseMass());
+        a->setVelocity(a->getVelocity() - frictionImpulse * a->getInverseMass());
+        a->setAngularVelocity(a->getAngularVelocity() - crossProduct(rA, frictionImpulse) * a->getInverseInertia());
+
+        b->setVelocity(b->getVelocity() + frictionImpulse * b->getInverseMass());
+        b->setAngularVelocity(b->getAngularVelocity() + crossProduct(rB, frictionImpulse) * b->getInverseInertia());
     }
 }

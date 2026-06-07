@@ -12,6 +12,7 @@ namespace Physics
         RigidBody* b = nullptr;
         sf::Vector2f normal;   // Points from A toward B
         float penetration = 0.f;
+        sf::Vector2f contactPoint; // World space contact point
     };
 
     class CollisionDetector
@@ -32,5 +33,6 @@ namespace Physics
         static Projection projectCircle(const sf::Vector2f& center, float radius, const sf::Vector2f& axis);
         static float dot(const sf::Vector2f& a, const sf::Vector2f& b);
         static float lengthSq(const sf::Vector2f& v);
+        static sf::Vector2f getSupportPoint(const std::array<sf::Vector2f, 4>& verts, const sf::Vector2f& dir);
     };
 }

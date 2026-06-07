@@ -16,6 +16,7 @@ namespace Physics
 
         // Force accumulation — cleared after each integration step
         void applyForce(const sf::Vector2f& force);
+        void applyTorque(float torque);
 
         // Accessors
         sf::Vector2f getPosition() const;
@@ -24,8 +25,14 @@ namespace Physics
         sf::Vector2f getVelocity() const;
         void setVelocity(const sf::Vector2f& vel);
 
+        float getAngularVelocity() const;
+        void setAngularVelocity(float w);
+
         float getMass() const;
         float getInverseMass() const;
+
+        float getMomentOfInertia() const;
+        float getInverseInertia() const;
 
         float getRestitution() const;
         void setRestitution(float e);
@@ -43,10 +50,16 @@ namespace Physics
         sf::Vector2f velocity;
         sf::Vector2f forceAccumulator;
 
+        float angle;
+        float angularVelocity;
+        float torqueAccumulator;
+
         float mass;
         float inverseMass; // 0 = static/infinite mass
+        float momentOfInertia;
+        float inverseInertia; // 0 = static/infinite inertia
+
         float restitution;
-        float angle;
 
         std::unique_ptr<Shape> shape;
     };

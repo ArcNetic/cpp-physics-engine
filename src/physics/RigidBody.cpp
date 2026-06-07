@@ -1,4 +1,5 @@
 #include "RigidBody.h"
+#include <cmath>
 
 namespace Physics
 {
@@ -6,12 +7,24 @@ namespace Physics
         : position(position),
           velocity({0.f, 0.f}),
           forceAccumulator({0.f, 0.f}),
+          angle(0.f),
+          angularVelocity(0.f),
+          torqueAccumulator(0.f),
           mass(mass),
           inverseMass(mass > 0.f ? 1.f / mass : 0.f),
           restitution(0.7f),
-          angle(0.f),
           shape(std::move(shape))
     {
+        if (mass > 0.f && this->shape)
+        {
+            momentOfInertia = this->shape->computeMomentOfInertia(mass);
+            inverseInertia = momentOfInertia > 0.f ? 1.f / momentOfInertia : 0.f;
+        }
+        else
+        {
+            momentOfInertia = 0.f;
+            inverseInertia = 0.f;
+        }
     }
 
     void RigidBody::integrate(float dt)
@@ -24,13 +37,29 @@ namespace Physics
         velocity += acceleration * dt;
         position += velocity * dt;
 
-        // Clear accumulated forces for the next frame
+        // Angular integration
+        float angularAcceleration = torqueAccumulator * inverseInertia;
+        angularVelocity += angularAcceleration * dt;
+        angle += angularVelocity * dt;
+
+        // Apply damping
+        float damping = std::pow(0.5f, dt); // Half-life of 1 second
+        velocity *= damping;
+        angularVelocity *= damping;
+
+        // Clear accumulated forces and torques for the next frame
         forceAccumulator = {0.f, 0.f};
+        torqueAccumulator = 0.f;
     }
 
     void RigidBody::applyForce(const sf::Vector2f& force)
     {
         forceAccumulator += force;
+    }
+
+    void RigidBody::applyTorque(float torque)
+    {
+        torqueAccumulator += torque;
     }
 
     sf::Vector2f RigidBody::getPosition() const
@@ -53,6 +82,16 @@ namespace Physics
         velocity = vel;
     }
 
+    float RigidBody::getAngularVelocity() const
+    {
+        return angularVelocity;
+    }
+
+    void RigidBody::setAngularVelocity(float w)
+    {
+        angularVelocity = w;
+    }
+
     float RigidBody::getMass() const
     {
         return mass;
@@ -61,6 +100,16 @@ namespace Physics
     float RigidBody::getInverseMass() const
     {
         return inverseMass;
+    }
+
+    float RigidBody::getMomentOfInertia() const
+    {
+        return momentOfInertia;
+    }
+
+    float RigidBody::getInverseInertia() const
+    {
+        return inverseInertia;
     }
 
     float RigidBody::getRestitution() const

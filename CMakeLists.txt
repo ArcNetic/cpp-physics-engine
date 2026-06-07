@@ -21,6 +21,7 @@ add_executable(PhysicsSandbox
     src/physics/PhysicsWorld.cpp
     src/physics/CollisionDetector.cpp
     src/physics/CollisionResolver.cpp
+    src/renderer/Renderer.cpp
 )
 
 target_link_libraries(PhysicsSandbox PRIVATE

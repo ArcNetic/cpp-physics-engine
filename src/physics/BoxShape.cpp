@@ -22,6 +22,12 @@ namespace Physics
         return boundingRadius;
     }
 
+    float BoxCollider::computeMomentOfInertia(float mass) const
+    {
+        // Solid rectangle: I = 1/12 * m * (w^2 + h^2)
+        return (1.f / 12.f) * mass * (width * width + height * height);
+    }
+
     float BoxCollider::getWidth() const
     {
         return width;

@@ -6,6 +6,7 @@
 #include "physics/BoxShape.h"
 #include "physics/PhysicsWorld.h"
 #include "physics/Constants.h"
+#include "renderer/Renderer.h"
 
 int main()
 {
@@ -14,12 +15,23 @@ int main()
     // clock for dt
     sf::Clock clock;
 
-    // Draw floor
-    sf::RectangleShape floor(sf::Vector2f({800.f, 20.f}));
-    floor.setPosition({0.f, Constants::FLOOR_Y});
-    floor.setFillColor(sf::Color::White);
-
     PhysicsWorld world;
+    Renderer renderer(window);
+
+    // Create Static Floor (width: 800, height: 50, pos: 400, 575 so top is at 550)
+    auto floorShape = std::make_unique<Physics::BoxCollider>(800.f, 50.f);
+    auto floorBody = std::make_unique<Physics::RigidBody>(sf::Vector2f(400.f, 575.f), 0.f, std::move(floorShape));
+    world.addBody(std::move(floorBody));
+
+    // Create Static Left Wall (width: 50, height: 600, pos: -25, 300)
+    auto leftWallShape = std::make_unique<Physics::BoxCollider>(50.f, 600.f);
+    auto leftWallBody = std::make_unique<Physics::RigidBody>(sf::Vector2f(-25.f, 300.f), 0.f, std::move(leftWallShape));
+    world.addBody(std::move(leftWallBody));
+
+    // Create Static Right Wall (width: 50, height: 600, pos: 825, 300)
+    auto rightWallShape = std::make_unique<Physics::BoxCollider>(50.f, 600.f);
+    auto rightWallBody = std::make_unique<Physics::RigidBody>(sf::Vector2f(825.f, 300.f), 0.f, std::move(rightWallShape));
+    world.addBody(std::move(rightWallBody));
 
     while (window.isOpen())
     {
@@ -31,6 +43,15 @@ int main()
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
+            }
+
+            // Toggle debug draw with D key
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->code == sf::Keyboard::Key::D)
+                {
+                    renderer.setDebugDraw(!renderer.isDebugDraw());
+                }
             }
 
             // Left-click -> spawn a circle
@@ -69,8 +90,7 @@ int main()
 
         // Render
         window.clear();
-        world.render(window);
-        window.draw(floor);
+        renderer.drawBodies(world.getBodies());
         window.display();
     }
 

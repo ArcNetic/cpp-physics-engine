@@ -11,6 +11,7 @@ namespace Physics
 
         ShapeType getType() const override;
         float getBoundingRadius() const override;
+        float computeMomentOfInertia(float mass) const override;
 
         float getRadius() const;
 
