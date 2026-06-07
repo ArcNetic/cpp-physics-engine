@@ -1,8 +1,9 @@
 #include "PhysicsWorld.h"
 #include "CircleBody.h"
+#include "CollisionDetector.h"
+#include "CollisionResolver.h"
 #include "Constants.h"
 #include <cmath>
-#include <algorithm>
 
 void PhysicsWorld::update(float dt)
 {
@@ -38,69 +39,11 @@ void PhysicsWorld::detectAndResolveCollisions()
     {
         for (size_t j = i + 1; j < bodies.size(); j++)
         {
-            Physics::RigidBody* a = bodies[i].get();
-            Physics::RigidBody* b = bodies[j].get();
-
-            // Currently only circle-circle collisions
-            const auto* shapeA = dynamic_cast<const Physics::CircleCollider*>(a->getShape());
-            const auto* shapeB = dynamic_cast<const Physics::CircleCollider*>(b->getShape());
-            if (!shapeA || !shapeB)
-                continue;
-
-            sf::Vector2f posA = a->getPosition();
-            sf::Vector2f posB = b->getPosition();
-
-            float radiusA = shapeA->getRadius();
-            float radiusB = shapeB->getRadius();
-
-            float dx = posB.x - posA.x;
-            float dy = posB.y - posA.y;
-
-            float distSq = dx * dx + dy * dy;
-            float minDist = radiusA + radiusB;
-
-            // Early-out: no collision
-            if (distSq >= minDist * minDist)
-                continue;
-
-            float distance = std::sqrt(distSq);
-
-            // Guard against divide-by-zero when bodies overlap exactly
-            if (distance < 0.0001f)
-                continue;
-
-            float overlap = minDist - distance;
-            sf::Vector2f normal{dx / distance, dy / distance};
-
-            // --- Positional correction (mass-weighted) ---
-            float totalInvMass = a->getInverseMass() + b->getInverseMass();
-            if (totalInvMass > 0.f)
+            Physics::Manifold manifold;
+            if (Physics::CollisionDetector::detect(bodies[i].get(), bodies[j].get(), manifold))
             {
-                sf::Vector2f correction = normal * (overlap / totalInvMass);
-                a->setPosition(posA - correction * a->getInverseMass());
-                b->setPosition(posB + correction * b->getInverseMass());
+                Physics::CollisionResolver::resolve(manifold);
             }
-
-            // --- Impulse-based velocity resolution ---
-            sf::Vector2f velA = a->getVelocity();
-            sf::Vector2f velB = b->getVelocity();
-            sf::Vector2f relativeVel = velB - velA;
-
-            float velAlongNormal = relativeVel.x * normal.x + relativeVel.y * normal.y;
-
-            // Already separating
-            if (velAlongNormal > 0.f)
-                continue;
-
-            // Restitution: use minimum of the two bodies
-            float e = std::min(a->getRestitution(), b->getRestitution());
-
-            // Impulse scalar: j = -(1+e) * Vrel·n / (1/mA + 1/mB)
-            float impulseMag = -(1.f + e) * velAlongNormal / totalInvMass;
-
-            sf::Vector2f impulse = normal * impulseMag;
-            a->setVelocity(velA - impulse * a->getInverseMass());
-            b->setVelocity(velB + impulse * b->getInverseMass());
         }
     }
 }
@@ -129,6 +72,9 @@ void PhysicsWorld::enforceFloorConstraint()
             {
                 vel.y = 0.f;
             }
+
+            // Floor friction: reduce horizontal velocity
+            vel.x *= (1.f - Constants::FRICTION_DYNAMIC);
 
             body->setVelocity(vel);
         }

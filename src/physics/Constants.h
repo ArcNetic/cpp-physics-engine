@@ -17,4 +17,8 @@ namespace Constants
     // Window dimensions
     constexpr float WINDOW_WIDTH = 800.f;
     constexpr float WINDOW_HEIGHT = 600.f;
+
+    // Friction coefficients (Coulomb model)
+    constexpr float FRICTION_STATIC = 0.4f;
+    constexpr float FRICTION_DYNAMIC = 0.2f;
 }

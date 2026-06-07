@@ -18,6 +18,8 @@ add_executable(PhysicsSandbox
     src/physics/RigidBody.cpp
     src/physics/CircleBody.cpp
     src/physics/PhysicsWorld.cpp
+    src/physics/CollisionDetector.cpp
+    src/physics/CollisionResolver.cpp
 )
 
 target_link_libraries(PhysicsSandbox PRIVATE
