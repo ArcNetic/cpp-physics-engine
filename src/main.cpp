@@ -132,11 +132,10 @@ int main()
         // render
         window.clear();
 
+        world.render(window);
+
         window.draw(floor);
-        for (Ball &ball : world.getBalls())
-        {
-            ball.render(window);
-        }
+
         window.display();
     }
 
