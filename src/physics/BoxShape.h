@@ -2,7 +2,6 @@
 #include "Vector2.h"
 
 #include "Shape.h"
-#include <SFML/System/Vector2.hpp>
 #include <array>
 
 namespace Physics

@@ -3,8 +3,6 @@
 
 namespace
 {
-    const float PI = 3.14159265359f;
-
     Physics::Vector2 rotate(const Physics::Vector2& v, float angleInRadians)
     {
         float c = std::cos(angleInRadians);
@@ -27,8 +25,8 @@ namespace Physics
 
     void DistanceJoint::preStep(float dt)
     {
-        rA = rotate(localAnchorA, a->getAngle() * PI / 180.f);
-        rB = rotate(localAnchorB, b->getAngle() * PI / 180.f);
+        rA = rotate(localAnchorA, a->getAngle());
+        rB = rotate(localAnchorB, b->getAngle());
 
         Vector2 pA = a->getPosition() + rA;
         Vector2 pB = b->getPosition() + rB;
@@ -82,12 +80,12 @@ namespace Physics
 
     Vector2 DistanceJoint::getWorldAnchorA() const
     {
-        return a->getPosition() + rotate(localAnchorA, a->getAngle() * PI / 180.f);
+        return a->getPosition() + rotate(localAnchorA, a->getAngle());
     }
 
     Vector2 DistanceJoint::getWorldAnchorB() const
     {
-        return b->getPosition() + rotate(localAnchorB, b->getAngle() * PI / 180.f);
+        return b->getPosition() + rotate(localAnchorB, b->getAngle());
     }
 }
 
